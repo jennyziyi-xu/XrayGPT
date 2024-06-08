@@ -22,7 +22,7 @@ from xraygpt.runners import *
 from xraygpt.tasks import *
 
 prompt = "Write a detailed radiologic report on the given chest X-ray image. Could you highlight any abnormalities or concerns in this chest x-ray image? Note down any support devices."
-result_csv_path = "outputs/result_6.csv"
+result_csv_path = "outputs/result_7.csv"
 number_samples =200
 
 
@@ -92,7 +92,7 @@ if __name__ == "__main__":
                 
                 img_list = []
                 chat.upload_img(img_path, CONV_VISION, img_list)
-                output_text, _ = chat.answer(CONV_VISION, img_list)
+                output_text, _ = chat.answer(CONV_VISION, img_list, temperature=0.5)
 
                 # write the row to the new csv file
-                f.write(f"{dicom_id},{study_id},{subject_id},{output_text}\n")
+                f.write(f"{dicom_id},{study_id},{subject_id},\"{output_text}\"\n")
