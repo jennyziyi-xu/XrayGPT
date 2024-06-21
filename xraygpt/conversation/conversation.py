@@ -1,7 +1,8 @@
 import argparse
 import time
 from PIL import Image
-
+import csv
+import ast
 import numpy as np
 import json
 import torch
@@ -175,14 +176,32 @@ class Chat:
             temperature=temperature,
         )
         
-        # np.set_printoptions(threshold=np.inf)
-        # with open("/home/jex451/XrayGPT/output_log3.txt", 'a') as file:
-        #     outputs0_cpu = outputs[0].cpu()
-        #     outputs0_np = outputs0_cpu.numpy()
-        #     file.write("outputs[0]\n ")
-        #     file.write(np.array2string(outputs0_np))
-        #     file.write("outputs[0].shape\n")
-        #     file.write(str(outputs0_np.shape))
+        # Log to a text file for debugging purposes. 
+        np.set_printoptions(threshold=np.inf)
+        with open("/home/jex451/XrayGPT/outputs/output_log3.txt", 'a') as file:
+            outputs0_cpu = outputs[0].cpu()
+            outputs0_np = outputs0_cpu.numpy()
+            file.write("outputs[0]\n ")
+            file.write(np.array2string(outputs0_np))
+            file.write("outputs[0].shape\n")
+            file.write(str(outputs0_np.shape))
+
+        # write to the csv file
+        csv_file_path = "/home/jex451/XrayGPT/outputs/outputs.csv"
+
+        with open(csv_file_path, 'r') as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+
+        last_row = rows[-1]
+        last_row_logits = ast.literal_eval(last_row[0])
+
+        with open(csv_file_path, 'w', newline='') as file:
+            writer = csv.writer(file)
+            for row in rows[:-1]:
+                writer.writerow(row)
+            file.write(f"\"{last_row_logits}\",\"{list(outputs0_np)}\"\n")
+
        
         output_token = outputs[0]
         if output_token[0] == 0:  # the model might output a unknow token <unk> at the beginning. remove it

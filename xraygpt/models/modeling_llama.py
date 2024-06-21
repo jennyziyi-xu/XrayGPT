@@ -5,6 +5,8 @@ import math
 import numpy as np
 from typing import List, Optional, Tuple, Union
 
+import csv
+import ast
 import torch
 import torch.utils.checkpoint
 from torch import nn
@@ -691,34 +693,83 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         logits = self.lm_head(hidden_states)
 
         # Set print options to avoid truncation
-        # np.set_printoptions(threshold=np.inf)
-        # if logits.shape[1] == 1:
-        #     with open("/home/jex451/XrayGPT/output_log3.txt", 'a') as file:
-        #         file.write("logits:\n")
-                
-        #         logits_cpu = logits[0][0].cpu()
-        #         logits_np = logits_cpu.numpy()
-
-        #         logits_list = list(enumerate(logits_np))
-
-        #         logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
-
-        #         logits_top_20 = logits_sorted[:20]
-
-        #         file.write(str(logits_top_20))
-        #         file.write("end:\n")
-
+        np.set_printoptions(threshold=np.inf)
+        m = torch.nn.Softmax(dim=0)
+        
         if logits.shape[1] != 1:
-            logits_112 = logits[0]
-            for (index, logit_array)  in enumerate(logits_112):
-                print(index)
-                logits_cpu = logit_array.cpu()
+            logits_array = logits[0][-1]
+        else:
+            logits_array = logits[0][0]
+
+        # apply softmax
+        logits_softmax = m(logits_array)
+        logits_np = logits_softmax.cpu().numpy()
+        logits_list = list(enumerate(logits_np))
+        logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
+        # Get the top 20 vocabs and their indices. 
+        logits_top_20 = logits_sorted[:20]
+
+        # write to the csv file
+        csv_file_path = "/home/jex451/XrayGPT/outputs/outputs.csv"
+
+        with open(csv_file_path, 'r') as file:
+            reader = csv.reader(file)
+            rows = list(reader)
+
+        if not rows:
+            with open(csv_file_path, 'a') as file:
+                file.write("logits, output_indices\n")
+                all_logits = {0:logits_top_20}
+                file.write(f"\"{all_logits}\",")
+        else:
+            # else get the last row 
+            last_row = rows[-1]
+            if len(list(last_row[1])) != 0 :
+                # add a new row 
+                all_logits = {0:logits_top_20}
+                with open(csv_file_path, 'a') as file:
+                    print("adding a new row")
+                    file.write(f"\"{all_logits}\",")
+            else:
+                print("appending to a row")
+                # modify to add to the logits
+                dict_logits = ast.literal_eval(last_row[0])
+        
+                # get the last index
+                last_index = max(dict_logits.keys())
+                dict_logits[last_index + 1] = logits_top_20
+                with open(csv_file_path, 'w', newline='') as file:
+                    writer = csv.writer(file)
+                    for row in rows[:-1]:
+                        writer.writerow(row)
+                    file.write(f"\"{dict_logits}\",")
+            
+
+        # Log to a text file for debugging purposes. 
+        if logits.shape[1] == 1:
+            with open("/home/jex451/XrayGPT/outputs/output_log3.txt", 'a') as file:
+                file.write("logits:\n")
+                
+                logits_cpu = logits[0][0].cpu()
                 logits_np = logits_cpu.numpy()
 
                 logits_list = list(enumerate(logits_np))
                 logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
                 logits_top_20 = logits_sorted[:20]
-                print(logits_top_20)
+                file.write(str(logits_top_20))
+                file.write("end:\n")
+
+        # if logits.shape[1] != 1:
+        #     logits_112 = logits[0]
+        #     for (index, logit_array)  in enumerate(logits_112):
+        #         print(index)
+        #         logits_cpu = logit_array.cpu()
+        #         logits_np = logits_cpu.numpy()
+
+        #         logits_list = list(enumerate(logits_np))
+        #         logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
+        #         logits_top_20 = logits_sorted[:20]
+        #         print(logits_top_20)
                 
 
         loss = None
