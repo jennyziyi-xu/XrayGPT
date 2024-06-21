@@ -2,6 +2,8 @@ import argparse
 import time
 from PIL import Image
 
+import numpy as np
+import json
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, LlamaTokenizer
 from transformers import StoppingCriteria, StoppingCriteriaList
@@ -172,11 +174,26 @@ class Chat:
             length_penalty=length_penalty,
             temperature=temperature,
         )
+        
+        # np.set_printoptions(threshold=np.inf)
+        # with open("/home/jex451/XrayGPT/output_log3.txt", 'a') as file:
+        #     outputs0_cpu = outputs[0].cpu()
+        #     outputs0_np = outputs0_cpu.numpy()
+        #     file.write("outputs[0]\n ")
+        #     file.write(np.array2string(outputs0_np))
+        #     file.write("outputs[0].shape\n")
+        #     file.write(str(outputs0_np.shape))
+       
         output_token = outputs[0]
         if output_token[0] == 0:  # the model might output a unknow token <unk> at the beginning. remove it
             output_token = output_token[1:]
         if output_token[0] == 1:  # some users find that there is a start token <s> at the beginning. remove it
             output_token = output_token[1:]
+
+        # Write the vocabulary to the file. 
+        # file = open("/home/jex451/XrayGPT/output_vocab.json", 'w')
+        # json.dump(self.model.llama_tokenizer.get_vocab(), file)
+        
         output_text = self.model.llama_tokenizer.decode(output_token, add_special_tokens=False)
         output_text = output_text.split('###')[0]  # remove the stop sign '###'
         output_text = output_text.split('Doctor:')[-1].strip()

@@ -2,6 +2,7 @@
 
 """ PyTorch LLaMA model."""
 import math
+import numpy as np
 from typing import List, Optional, Tuple, Union
 
 import torch
@@ -689,8 +690,39 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         hidden_states = outputs[0]
         logits = self.lm_head(hidden_states)
 
+        # Set print options to avoid truncation
+        # np.set_printoptions(threshold=np.inf)
+        # if logits.shape[1] == 1:
+        #     with open("/home/jex451/XrayGPT/output_log3.txt", 'a') as file:
+        #         file.write("logits:\n")
+                
+        #         logits_cpu = logits[0][0].cpu()
+        #         logits_np = logits_cpu.numpy()
+
+        #         logits_list = list(enumerate(logits_np))
+
+        #         logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
+
+        #         logits_top_20 = logits_sorted[:20]
+
+        #         file.write(str(logits_top_20))
+        #         file.write("end:\n")
+
+        if logits.shape[1] != 1:
+            logits_112 = logits[0]
+            for (index, logit_array)  in enumerate(logits_112):
+                print(index)
+                logits_cpu = logit_array.cpu()
+                logits_np = logits_cpu.numpy()
+
+                logits_list = list(enumerate(logits_np))
+                logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
+                logits_top_20 = logits_sorted[:20]
+                print(logits_top_20)
+                
+
         loss = None
-        if labels is not None:
+        if labels is not None:    # this clause is not executed. 
             # Shift so that tokens < n predict n
             shift_logits = logits[..., :-1, :].contiguous()
             shift_labels = labels[..., 1:].contiguous()
