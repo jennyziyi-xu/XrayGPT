@@ -175,10 +175,13 @@ class Chat:
             length_penalty=length_penalty,
             temperature=temperature,
         )
+
+        ###### Start of Modifications 
         
-        # Log to a text file for debugging purposes. 
+        # TODO: Change path to match with modeling_llama.py or comment out. 
+        print("Writing to a text file for debugging purposes. ")
         np.set_printoptions(threshold=np.inf)
-        with open("/home/jex451/XrayGPT/outputs/output_log3.txt", 'a') as file:
+        with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
             outputs0_cpu = outputs[0].cpu()
             outputs0_np = outputs0_cpu.numpy()
             file.write("outputs[0]\n ")
@@ -186,8 +189,9 @@ class Chat:
             file.write("outputs[0].shape\n")
             file.write(str(outputs0_np.shape))
 
-        # write to the csv file
-        csv_file_path = "/home/jex451/XrayGPT/outputs/outputs.csv"
+        # TODO: Change path to match the path in modeling_llama.py: write to the csv file
+        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/debug_logits.csv"
+        print("Writing to the csv file: ", csv_file_path)
 
         with open(csv_file_path, 'r') as file:
             reader = csv.reader(file)
@@ -202,6 +206,7 @@ class Chat:
                 writer.writerow(row)
             file.write(f"\"{last_row_logits}\",\"{list(outputs0_np)}\"\n")
 
+        ###### End of Modifications 
        
         output_token = outputs[0]
         if output_token[0] == 0:  # the model might output a unknow token <unk> at the beginning. remove it

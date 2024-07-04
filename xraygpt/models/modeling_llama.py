@@ -694,8 +694,10 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
 
         ######## Start of Changes. 
 
-        # write to the csv file
+        # TODO: Change path. 
         csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/debug_logits.csv"
+
+        print("Writing logits to csv file, ", csv_file_path)
 
         # Set print options to avoid truncation
         np.set_printoptions(threshold=np.inf)
@@ -731,10 +733,8 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
                 # add a new row 
                 all_logits = {0:logits_top_50}
                 with open(csv_file_path, 'a') as file:
-                    print("adding a new row")
                     file.write(f"\"{all_logits}\",")
             else:
-                print("appending to a row")
                 # modify to add to the logits
                 dict_logits = ast.literal_eval(last_row[0])
         
@@ -748,14 +748,14 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
                     file.write(f"\"{dict_logits}\",")
             
 
-        # Log to a text file for debugging purposes. 
+        ################# TODO: Change path or comment out. 
+        print("Writing logits to a text file for debugging purposes.")
+
         if logits.shape[1] == 1:
             with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
                 file.write("logits:\n")
-                
                 logits_cpu = logits[0][0].cpu()
                 logits_np = logits_cpu.numpy()
-
                 logits_list = list(enumerate(logits_np))
                 logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
                 logits_top_50 = logits_sorted[:50]
