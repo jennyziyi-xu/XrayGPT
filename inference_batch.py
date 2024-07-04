@@ -21,12 +21,13 @@ from xraygpt.processors import *
 from xraygpt.runners import *
 from xraygpt.tasks import *
 
-prompt = "Write a detailed radiologic report on the given chest X-ray image."
-result_csv_path = "outputs/samples4.csv"
-number_samples = 4
+input_csv = "/home/jex451/data/mimic_test_reports_new.csv"
 pre_path = '/n/data1/hms/dbmi/rajpurkar/lab/datasets/cxr/MIMIC-CXR/raw_jpg/files/'
 
-
+# TODO: modify these. 
+prompt = "Write a detailed radiologic report on the given chest X-ray image."
+result_csv_path = "outputs/07_04/debug_inference.csv"
+number_samples = 2
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Demo")
@@ -63,7 +64,7 @@ if __name__ == "__main__":
     result = pd.DataFrame(columns=['dicom_id', 'study_id', 'subject_id', 'target'])
 
     # Read from a csv file 
-    input_csv = pd.read_csv("/home/jex451/data/mimic_test_reports_new.csv")
+    input_csv = pd.read_csv(input_csv)
 
     with open(result_csv_path, 'w') as f:
         f.write("dicom_id,study_id,subject_id,target\n")

@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple, Union
 
 import csv
 import ast
+import os
 import torch
 import torch.utils.checkpoint
 from torch import nn
@@ -697,8 +698,6 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         # TODO: Change path. 
         csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/debug_logits.csv"
 
-        print("Writing logits to csv file, ", csv_file_path)
-
         # Set print options to avoid truncation
         np.set_printoptions(threshold=np.inf)
         m = torch.nn.Softmax(dim=0)
@@ -717,16 +716,19 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         # https://huggingface.co/docs/transformers/main/en/main_classes/configuration#transformers.PretrainedConfig
         logits_top_50 = logits_sorted[:50]
 
-        with open(csv_file_path, 'r') as file:
-            reader = csv.reader(file)
-            rows = list(reader)
+        # with open(csv_file_path, 'r') as file:
+        #     reader = csv.reader(file)
+        #     rows = list(reader)
 
-        if not rows:
+        if not os.path.exists(csv_file_path):
             with open(csv_file_path, 'a') as file:
                 file.write("logits, output_indices\n")
                 all_logits = {0:logits_top_50}
                 file.write(f"\"{all_logits}\",")
         else:
+            with open(csv_file_path, 'r') as file:
+                reader = csv.reader(file)
+                rows = list(reader)
             # else get the last row 
             last_row = rows[-1]
             if len(list(last_row[1])) != 0 :
@@ -749,7 +751,6 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
             
 
         ################# TODO: Change path or comment out. 
-        print("Writing logits to a text file for debugging purposes.")
 
         if logits.shape[1] == 1:
             with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
