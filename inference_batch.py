@@ -21,9 +21,10 @@ from xraygpt.processors import *
 from xraygpt.runners import *
 from xraygpt.tasks import *
 
-prompt = "Write a detailed radiologic report on the given chest X-ray image. Could you highlight any abnormalities or concerns in this chest x-ray image? Note down any support devices."
-result_csv_path = "outputs/result_7.csv"
-number_samples =200
+prompt = "Write a detailed radiologic report on the given chest X-ray image."
+result_csv_path = "outputs/samples4.csv"
+number_samples = 4
+pre_path = '/n/data1/hms/dbmi/rajpurkar/lab/datasets/cxr/MIMIC-CXR/raw_jpg/files/'
 
 
 
@@ -57,10 +58,6 @@ if __name__ == "__main__":
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
 
     print('Initialization Finished')
-
-
-
-    pre_path = '/n/data1/hms/dbmi/rajpurkar/lab/datasets/cxr/MIMIC-CXR/raw_jpg/files/'
 
     # create a blank new csv file
     result = pd.DataFrame(columns=['dicom_id', 'study_id', 'subject_id', 'target'])
