@@ -692,6 +692,11 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         hidden_states = outputs[0]
         logits = self.lm_head(hidden_states)
 
+        ######## Start of Changes. 
+
+        # write to the csv file
+        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/debug_logits.csv"
+
         # Set print options to avoid truncation
         np.set_printoptions(threshold=np.inf)
         m = torch.nn.Softmax(dim=0)
@@ -706,11 +711,9 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         logits_np = logits_softmax.cpu().numpy()
         logits_list = list(enumerate(logits_np))
         logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
-        # Get the top 20 vocabs and their indices. 
-        logits_top_20 = logits_sorted[:20]
-
-        # write to the csv file
-        csv_file_path = "/home/jex451/XrayGPT/outputs/outputs.csv"
+        # Get the top 50 vocabs and their indices. top_k=50 by default:  
+        # https://huggingface.co/docs/transformers/main/en/main_classes/configuration#transformers.PretrainedConfig
+        logits_top_50 = logits_sorted[:50]
 
         with open(csv_file_path, 'r') as file:
             reader = csv.reader(file)
@@ -719,14 +722,14 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         if not rows:
             with open(csv_file_path, 'a') as file:
                 file.write("logits, output_indices\n")
-                all_logits = {0:logits_top_20}
+                all_logits = {0:logits_top_50}
                 file.write(f"\"{all_logits}\",")
         else:
             # else get the last row 
             last_row = rows[-1]
             if len(list(last_row[1])) != 0 :
                 # add a new row 
-                all_logits = {0:logits_top_20}
+                all_logits = {0:logits_top_50}
                 with open(csv_file_path, 'a') as file:
                     print("adding a new row")
                     file.write(f"\"{all_logits}\",")
@@ -737,7 +740,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         
                 # get the last index
                 last_index = max(dict_logits.keys())
-                dict_logits[last_index + 1] = logits_top_20
+                dict_logits[last_index + 1] = logits_top_50
                 with open(csv_file_path, 'w', newline='') as file:
                     writer = csv.writer(file)
                     for row in rows[:-1]:
@@ -747,7 +750,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
 
         # Log to a text file for debugging purposes. 
         if logits.shape[1] == 1:
-            with open("/home/jex451/XrayGPT/outputs/output_log3.txt", 'a') as file:
+            with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
                 file.write("logits:\n")
                 
                 logits_cpu = logits[0][0].cpu()
@@ -755,8 +758,8 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
 
                 logits_list = list(enumerate(logits_np))
                 logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
-                logits_top_20 = logits_sorted[:20]
-                file.write(str(logits_top_20))
+                logits_top_50 = logits_sorted[:50]
+                file.write(str(logits_top_50))
                 file.write("end:\n")
 
         # if logits.shape[1] != 1:
@@ -770,7 +773,8 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         #         logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
         #         logits_top_20 = logits_sorted[:20]
         #         print(logits_top_20)
-                
+            
+        ############## End of changes. 
 
         loss = None
         if labels is not None:    # this clause is not executed. 
