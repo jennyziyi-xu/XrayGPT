@@ -1,6 +1,10 @@
 import argparse
 import os
+import sys
 import random
+
+import ast
+import csv
 
 import pandas as pd 
 
@@ -21,12 +25,19 @@ from xraygpt.processors import *
 from xraygpt.runners import *
 from xraygpt.tasks import *
 
+sys.path.append(os.path.join(os.path.dirname(__file__), '../UQ'))
+from uncertainty_score import *
+
 input_csv = "/home/jex451/data/mimic_test_reports_new.csv"
 pre_path = '/n/data1/hms/dbmi/rajpurkar/lab/datasets/cxr/MIMIC-CXR/raw_jpg/files/'
 
 # TODO: modify these. 
-prompt = "Write a detailed radiologic report on the given chest X-ray image. If any support devices are present, note them down."
-result_csv_path = "outputs/07_04/temp_0_inference.csv"
+prompt = "Write a detailed radiologic report on the given chest X-ray image. If any support devices are present, describe the support devices."
+result_csv_path = "outputs/07_04/experiments/t_0_1000_inference.csv"
+result_uq_path = "outputs/07_04/experiments/t_0_1000_uq_scores.csv"
+## Input file 
+logits_csv_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0_1000_logits.csv"
+
 number_samples = 1000
 temperature = 0.1
 
@@ -67,34 +78,45 @@ if __name__ == "__main__":
     # Read from a csv file 
     input_csv = pd.read_csv(input_csv)
 
-    with open(result_csv_path, 'w') as f:
-        f.write("dicom_id,study_id,subject_id,target\n")
+    f = open(result_csv_path, 'w')
+    f_uq = open(result_uq_path, 'w')
+    f.write("dicom_id,study_id,subject_id,target\n")
+    f_uq.write("data_id,max_prob,max_prob_sentence,max_prob_token,avg_prob,avg_prob_sentence,max_entropy,max_entropy_sentence,max_entropy_token,avg_entropy,avg_entropy_sentence,token_record\n")
 
-        # loop through each row
-        for index, row in input_csv.iterrows():
+    # loop through each row
+    for index, row in input_csv.iterrows():
 
-            if (index < number_samples):
+        if (index < number_samples):
 
-                if (index % 20 == 0):
-                    print("Index is ", index)
+            if (index % 20 == 0):
+                print("Index is ", index)
 
-                # clear the conversation. 
-                CONV_VISION.messages = []
-                CONV_VISION.append_message(CONV_VISION.roles[0], prompt)
+            # clear the conversation. 
+            CONV_VISION.messages = []
+            CONV_VISION.append_message(CONV_VISION.roles[0], prompt)
 
-                chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
+            chat = Chat(model, vis_processor, device='cuda:{}'.format(args.gpu_id))
 
-                # extract the columns
-                dicom_id = row['dicom_id']
-                study_id = row['study_id']
-                subject_id = row['subject_id']
-                    
-                # construct the image path 
-                img_path = pre_path + "p{}/p{}/s{}/{}.jpg".format(str(subject_id)[:2], subject_id, study_id, dicom_id)
+            # extract the columns
+            dicom_id = row['dicom_id']
+            study_id = row['study_id']
+            subject_id = row['subject_id']
                 
-                img_list = []
-                chat.upload_img(img_path, CONV_VISION, img_list)
-                output_text, _ = chat.answer(CONV_VISION, img_list, temperature=temperature)
+            # construct the image path 
+            img_path = pre_path + "p{}/p{}/s{}/{}.jpg".format(str(subject_id)[:2], subject_id, study_id, dicom_id)
+            
+            img_list = []
+            chat.upload_img(img_path, CONV_VISION, img_list)
+            output_text, _ = chat.answer(CONV_VISION, img_list, temperature=temperature)
 
-                # write the row to the new csv file
-                f.write(f"{dicom_id},{study_id},{subject_id},\"{output_text}\"\n")
+            # write the row to the new csv file
+            f.write(f"{dicom_id},{study_id},{subject_id},\"{output_text}\"\n")
+
+            uq = get_scores(logits_csv_path)
+            f_uq.write(f"{index},{uq[0]},\"{uq[1]}\",\"{uq[2]}\",{uq[3]},\"{uq[4]}\",{uq[5]},\"{uq[6]}\",\"{uq[7]}\",{uq[8]},\"{uq[9]}\",\"{uq[10]}\"\n")
+
+
+    f.close()
+    f_uq.close()
+
+                

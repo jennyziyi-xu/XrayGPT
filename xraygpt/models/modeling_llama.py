@@ -696,7 +696,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         ######## Start of Changes. 
 
         # TODO: Change path. 
-        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/temp_0_logits.csv"
+        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0_1000_logits.csv"
 
         # Set print options to avoid truncation
         np.set_printoptions(threshold=np.inf)
@@ -717,20 +717,20 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         logits_top_50 = logits_sorted[:50]
 
         if not os.path.exists(csv_file_path):
-            with open(csv_file_path, 'a') as file:
-                file.write("logits, output_indices\n")
+            with open(csv_file_path, 'w') as file:
                 all_logits = {0:logits_top_50}
                 file.write(f"\"{all_logits}\",")
         else:
             with open(csv_file_path, 'r') as file:
                 reader = csv.reader(file)
                 rows = list(reader)
-            # else get the last row 
+            # get the last row 
             last_row = rows[-1]
             if len(list(last_row[1])) != 0 :
+                # remove old data. 
                 # add a new row 
                 all_logits = {0:logits_top_50}
-                with open(csv_file_path, 'a') as file:
+                with open(csv_file_path, 'w') as file:
                     file.write(f"\"{all_logits}\",")
             else:
                 # modify to add to the logits
@@ -740,9 +740,6 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
                 last_index = max(dict_logits.keys())
                 dict_logits[last_index + 1] = logits_top_50
                 with open(csv_file_path, 'w', newline='') as file:
-                    writer = csv.writer(file)
-                    for row in rows[:-1]:
-                        writer.writerow(row)
                     file.write(f"\"{dict_logits}\",")
             
 

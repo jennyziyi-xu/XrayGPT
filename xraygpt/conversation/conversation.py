@@ -192,8 +192,8 @@ class Chat:
         #     file.write(str(outputs0_np.shape))
 
         # TODO: Change path to match the path in modeling_llama.py: write to the csv file
-        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/temp_0_logits.csv"
-        print("Writing to the csv file: ", csv_file_path)
+        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0_1000_logits.csv"
+        # print("Writing to the csv file: ", csv_file_path)
 
         with open(csv_file_path, 'r') as file:
             reader = csv.reader(file)
@@ -203,9 +203,6 @@ class Chat:
         last_row_logits = ast.literal_eval(last_row[0])
 
         with open(csv_file_path, 'w', newline='') as file:
-            writer = csv.writer(file)
-            for row in rows[:-1]:
-                writer.writerow(row)
             file.write(f"\"{last_row_logits}\",\"{list(outputs0_np)}\"\n")
 
         ###### End of Modifications 
