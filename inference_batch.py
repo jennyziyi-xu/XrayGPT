@@ -25,9 +25,10 @@ input_csv = "/home/jex451/data/mimic_test_reports_new.csv"
 pre_path = '/n/data1/hms/dbmi/rajpurkar/lab/datasets/cxr/MIMIC-CXR/raw_jpg/files/'
 
 # TODO: modify these. 
-prompt = "Write a detailed radiologic report on the given chest X-ray image."
-result_csv_path = "outputs/07_04/debug_inference.csv"
-number_samples = 2
+prompt = "Write a detailed radiologic report on the given chest X-ray image. If any support devices are present, note them down."
+result_csv_path = "outputs/07_04/temp_0_inference.csv"
+number_samples = 1000
+temperature = 0.1
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Demo")
@@ -74,6 +75,9 @@ if __name__ == "__main__":
 
             if (index < number_samples):
 
+                if (index % 20 == 0):
+                    print("Index is ", index)
+
                 # clear the conversation. 
                 CONV_VISION.messages = []
                 CONV_VISION.append_message(CONV_VISION.roles[0], prompt)
@@ -90,7 +94,7 @@ if __name__ == "__main__":
                 
                 img_list = []
                 chat.upload_img(img_path, CONV_VISION, img_list)
-                output_text, _ = chat.answer(CONV_VISION, img_list, temperature=0.5)
+                output_text, _ = chat.answer(CONV_VISION, img_list, temperature=temperature)
 
                 # write the row to the new csv file
                 f.write(f"{dicom_id},{study_id},{subject_id},\"{output_text}\"\n")

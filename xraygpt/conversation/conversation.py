@@ -163,34 +163,36 @@ class Chat:
 
         embs = embs[:, begin_idx:]
 
+        ## TODO: Set do_sample=False is wanting greedy output. 
+        ## Set do_sample = True and temperature to enable stochasticity. 
         outputs = self.model.llama_model.generate(
             inputs_embeds=embs,
             max_new_tokens=max_new_tokens,
             stopping_criteria=self.stopping_criteria,
             num_beams=num_beams,
-            do_sample=True,
+            do_sample=False,
             min_length=min_length,
             top_p=top_p,
             repetition_penalty=repetition_penalty,
             length_penalty=length_penalty,
-            temperature=temperature,
+            # temperature=temperature,
         )
 
         ###### Start of Modifications 
-        
-        # TODO: Change path to match with modeling_llama.py or comment out. 
-        print("Writing to a text file for debugging purposes. ")
         np.set_printoptions(threshold=np.inf)
-        with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
-            outputs0_cpu = outputs[0].cpu()
-            outputs0_np = outputs0_cpu.numpy()
-            file.write("outputs[0]\n ")
-            file.write(np.array2string(outputs0_np))
-            file.write("outputs[0].shape\n")
-            file.write(str(outputs0_np.shape))
+        outputs0_cpu = outputs[0].cpu()
+        outputs0_np = outputs0_cpu.numpy()
+
+        # TODO: Change path to match with modeling_llama.py or comment out. 
+        # print("Writing to a text file for debugging purposes. ")
+        # with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
+        #     file.write("outputs[0]\n ")
+        #     file.write(np.array2string(outputs0_np))
+        #     file.write("outputs[0].shape\n")
+        #     file.write(str(outputs0_np.shape))
 
         # TODO: Change path to match the path in modeling_llama.py: write to the csv file
-        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/debug_logits.csv"
+        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/temp_0_logits.csv"
         print("Writing to the csv file: ", csv_file_path)
 
         with open(csv_file_path, 'r') as file:

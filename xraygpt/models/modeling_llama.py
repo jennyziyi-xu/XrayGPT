@@ -696,7 +696,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         ######## Start of Changes. 
 
         # TODO: Change path. 
-        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/debug_logits.csv"
+        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/temp_0_logits.csv"
 
         # Set print options to avoid truncation
         np.set_printoptions(threshold=np.inf)
@@ -715,10 +715,6 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         # Get the top 50 vocabs and their indices. top_k=50 by default:  
         # https://huggingface.co/docs/transformers/main/en/main_classes/configuration#transformers.PretrainedConfig
         logits_top_50 = logits_sorted[:50]
-
-        # with open(csv_file_path, 'r') as file:
-        #     reader = csv.reader(file)
-        #     rows = list(reader)
 
         if not os.path.exists(csv_file_path):
             with open(csv_file_path, 'a') as file:
@@ -752,16 +748,16 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
 
         ################# TODO: Change path or comment out. 
 
-        if logits.shape[1] == 1:
-            with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
-                file.write("logits:\n")
-                logits_cpu = logits[0][0].cpu()
-                logits_np = logits_cpu.numpy()
-                logits_list = list(enumerate(logits_np))
-                logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
-                logits_top_50 = logits_sorted[:50]
-                file.write(str(logits_top_50))
-                file.write("end:\n")
+        # if logits.shape[1] == 1:
+        #     with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
+        #         file.write("logits:\n")
+        #         logits_cpu = logits[0][0].cpu()
+        #         logits_np = logits_cpu.numpy()
+        #         logits_list = list(enumerate(logits_np))
+        #         logits_sorted = sorted(logits_list, key=lambda x:x[1], reverse=True)
+        #         logits_top_50 = logits_sorted[:50]
+        #         file.write(str(logits_top_50))
+        #         file.write("end:\n")
 
         # if logits.shape[1] != 1:
         #     logits_112 = logits[0]
