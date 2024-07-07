@@ -696,7 +696,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         ######## Start of Changes. 
 
         # TODO: Change path. 
-        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0_1000_logits.csv"
+        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0.5_1000_logits_4.csv"
 
         # Set print options to avoid truncation
         np.set_printoptions(threshold=np.inf)
@@ -721,6 +721,7 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
                 all_logits = {0:logits_top_50}
                 file.write(f"\"{all_logits}\",")
         else:
+            csv.field_size_limit(100000000)
             with open(csv_file_path, 'r') as file:
                 reader = csv.reader(file)
                 rows = list(reader)

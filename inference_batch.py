@@ -25,7 +25,7 @@ from xraygpt.processors import *
 from xraygpt.runners import *
 from xraygpt.tasks import *
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '../UQ'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '../UQ/scripts'))
 from uncertainty_score import *
 
 input_csv = "/home/jex451/data/mimic_test_reports_new.csv"
@@ -33,13 +33,13 @@ pre_path = '/n/data1/hms/dbmi/rajpurkar/lab/datasets/cxr/MIMIC-CXR/raw_jpg/files
 
 # TODO: modify these. 
 prompt = "Write a detailed radiologic report on the given chest X-ray image. If any support devices are present, describe the support devices."
-result_csv_path = "outputs/07_04/experiments/t_0_1000_inference.csv"
-result_uq_path = "outputs/07_04/experiments/t_0_1000_uq_scores.csv"
-## Input file 
-logits_csv_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0_1000_logits.csv"
+result_csv_path = ""
+result_uq_path = ""
+
+logits_csv_path = ""
 
 number_samples = 1000
-temperature = 0.1
+temperature = 0.5
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Demo")

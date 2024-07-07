@@ -170,12 +170,12 @@ class Chat:
             max_new_tokens=max_new_tokens,
             stopping_criteria=self.stopping_criteria,
             num_beams=num_beams,
-            do_sample=False,
+            do_sample=True,
             min_length=min_length,
             top_p=top_p,
             repetition_penalty=repetition_penalty,
             length_penalty=length_penalty,
-            # temperature=temperature,
+            temperature=temperature,
         )
 
         ###### Start of Modifications 
@@ -192,9 +192,10 @@ class Chat:
         #     file.write(str(outputs0_np.shape))
 
         # TODO: Change path to match the path in modeling_llama.py: write to the csv file
-        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0_1000_logits.csv"
-        # print("Writing to the csv file: ", csv_file_path)
-
+        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0.5_1000_logits_4.csv"
+        print("Writing to the csv file: ", csv_file_path)
+        
+        csv.field_size_limit(100000000)
         with open(csv_file_path, 'r') as file:
             reader = csv.reader(file)
             rows = list(reader)
