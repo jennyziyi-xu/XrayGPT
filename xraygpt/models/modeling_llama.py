@@ -6,6 +6,7 @@ import numpy as np
 from typing import List, Optional, Tuple, Union
 
 import csv
+import pandas as pd
 import ast
 import os
 import torch
@@ -693,10 +694,13 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
         hidden_states = outputs[0]
         logits = self.lm_head(hidden_states)
 
-        ######## Start of Changes. 
+        ######## Start of writing to logits file. 
 
         # TODO: Change path. 
-        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0.5_1000_logits_4.csv"
+        csv_file_path = "/home/jex451/UQ/outputs/07_04_final/perturbation_diff/logits_3.csv"
+
+        # Initialize the curr token position. 
+        curr_token_pos = None
 
         # Set print options to avoid truncation
         np.set_printoptions(threshold=np.inf)
@@ -720,6 +724,8 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
             with open(csv_file_path, 'w') as file:
                 all_logits = {0:logits_top_50}
                 file.write(f"\"{all_logits}\",")
+                # Update curr_token_pos
+                curr_token_pos = 0
         else:
             csv.field_size_limit(100000000)
             with open(csv_file_path, 'r') as file:
@@ -731,6 +737,9 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
                 # remove old data. 
                 # add a new row 
                 all_logits = {0:logits_top_50}
+                # Update curr_token_pos
+                curr_token_pos = 0
+
                 with open(csv_file_path, 'w') as file:
                     file.write(f"\"{all_logits}\",")
             else:
@@ -742,7 +751,75 @@ class LlamaForCausalLM(LlamaPreTrainedModel):
                 dict_logits[last_index + 1] = logits_top_50
                 with open(csv_file_path, 'w', newline='') as file:
                     file.write(f"\"{dict_logits}\",")
+                # Update curr_token_pos
+                curr_token_pos = last_index + 1
             
+
+
+        ######## Start of perturbation-based experiments. 
+        # TODO: Change the flag type
+        flag_type = "max_diff"    # "max", "min", "max_diff"
+        assert (flag_type in ["max", "min", "max_diff"])
+        token_pos = None
+        token_id = None
+
+        points_perturb_file = "/home/jex451/UQ/outputs/07_04_final/perturbation_max/points_perturb.csv"
+        inference_file = "/home/jex451/UQ/outputs/07_04_final/perturbation_diff/inference_3.csv"
+
+        df_perturb = pd.read_csv(points_perturb_file)
+        valid_data_ids = df_perturb['data_id'].values
+
+        # Get how many inferences we have gotten from f_inference
+        df_inference = pd.read_csv(inference_file)
+        num_inferences = len(df_inference)
+            
+        # See if num_inferences matches with any data_id in points_perturb_file. 
+        if (num_inferences in valid_data_ids):
+            # get the row from df_perturb
+            row_perturb = df_perturb[df_perturb['data_id'] == num_inferences]
+
+            if (flag_type == "max"):
+                token_pos = row_perturb['max_entropy_pos'].values[0]
+                token_id = row_perturb['max_entropy_token_id'].values[0]
+            elif (flag_type == "min"):
+                token_pos = row_perturb['min_entropy_pos'].values[0]
+                token_id = row_perturb['min_entropy_token_id'].values[0]
+            elif (flag_type == "max_diff"):
+                token_pos = row_perturb['max_diff_pos'].values[0]
+                token_id = row_perturb['max_diff_id'].values[0]
+          
+
+        else:
+            print("{} is invalid.".format(num_inferences))
+
+
+        assert curr_token_pos is not None
+        
+
+        if (curr_token_pos == token_pos):
+            # Remove the logit corresponding to tokenId from variable logits[0][0]
+            if logits.shape[1] != 1:
+                logits[0][-1][token_id] = float("-inf")
+
+                ## Lines below used for inference_2
+                max_id = logits[0][-1].argmax()
+                logits[0][-1][max_id] = float("-inf")
+
+                ## Lines below used for inference_3
+                max_id = logits[0][-1].argmax()
+                logits[0][-1][max_id] = float("-inf")
+
+            else:
+                logits[0][0][token_id] = float("-inf")
+
+                ## Lines below used for inference_2
+                max_id = logits[0][0].argmax()
+                logits[0][0][max_id] = float("-inf")
+
+                ## Lines below used for inference_3
+                max_id = logits[0][0].argmax()
+                logits[0][0][max_id] = float("-inf")
+
 
         ################# TODO: Change path or comment out. 
 
