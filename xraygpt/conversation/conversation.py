@@ -15,6 +15,11 @@ from typing import List, Tuple, Any
 
 from xraygpt.common.registry import registry
 
+import os 
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '../UQ/model_utils'))
+from base import *
+
 
 class SeparatorStyle(Enum):
     """Different separator style."""
@@ -170,42 +175,21 @@ class Chat:
             max_new_tokens=max_new_tokens,
             stopping_criteria=self.stopping_criteria,
             num_beams=num_beams,
-            do_sample=True,
+            do_sample=False,
             min_length=min_length,
             top_p=top_p,
             repetition_penalty=repetition_penalty,
             length_penalty=length_penalty,
-            temperature=temperature,
+            # temperature=temperature,
         )
 
         ###### Start of Modifications 
-        np.set_printoptions(threshold=np.inf)
-        outputs0_cpu = outputs[0].cpu()
-        outputs0_np = outputs0_cpu.numpy()
 
-        # TODO: Change path to match with modeling_llama.py or comment out. 
-        # print("Writing to a text file for debugging purposes. ")
-        # with open("/home/jex451/XrayGPT/outputs/07_04/debug_logits.txt", 'a') as file:
-        #     file.write("outputs[0]\n ")
-        #     file.write(np.array2string(outputs0_np))
-        #     file.write("outputs[0].shape\n")
-        #     file.write(str(outputs0_np.shape))
-
-        # TODO: Change path to match the path in modeling_llama.py: write to the csv file
-        csv_file_path = "/home/jex451/XrayGPT/outputs/07_04/experiments/t_0.5_1000_logits_4.csv"
-        print("Writing to the csv file: ", csv_file_path)
+        # # TODO: Change path to match the logits path in modeling_llama.py: write to the csv file
+        csv_file_path = "/home/jex451/UQ/outputs/07_04_final/perturbation_diff/logits_3.csv"
+        write_output_tokens(csv_file_path, outputs[0])
         
-        csv.field_size_limit(100000000)
-        with open(csv_file_path, 'r') as file:
-            reader = csv.reader(file)
-            rows = list(reader)
-
-        last_row = rows[-1]
-        last_row_logits = ast.literal_eval(last_row[0])
-
-        with open(csv_file_path, 'w', newline='') as file:
-            file.write(f"\"{last_row_logits}\",\"{list(outputs0_np)}\"\n")
-
+        
         ###### End of Modifications 
        
         output_token = outputs[0]
@@ -213,10 +197,6 @@ class Chat:
             output_token = output_token[1:]
         if output_token[0] == 1:  # some users find that there is a start token <s> at the beginning. remove it
             output_token = output_token[1:]
-
-        # Write the vocabulary to the file. 
-        # file = open("/home/jex451/XrayGPT/output_vocab.json", 'w')
-        # json.dump(self.model.llama_tokenizer.get_vocab(), file)
         
         output_text = self.model.llama_tokenizer.decode(output_token, add_special_tokens=False)
         output_text = output_text.split('###')[0]  # remove the stop sign '###'

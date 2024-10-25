@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH -c 2                               # Request one core
+#SBATCH -c 8                               # Request one core
 #SBATCH -t 0-5:00                         # Runtime in D-HH:MM format
 #SBATCH -p gpu_quad                           # Partition to run in
 #SBATCH --gres=gpu:1                           # Partition to run in

@@ -3,7 +3,6 @@ import os
 import sys
 import random
 
-import ast
 import csv
 
 import pandas as pd 
@@ -33,10 +32,9 @@ pre_path = '/n/data1/hms/dbmi/rajpurkar/lab/datasets/cxr/MIMIC-CXR/raw_jpg/files
 
 # TODO: modify these. 
 prompt = "Write a detailed radiologic report on the given chest X-ray image. If any support devices are present, describe the support devices."
-result_csv_path = ""
-result_uq_path = ""
-
-logits_csv_path = ""
+result_csv_path = "/home/jex451/UQ/outputs/07_04_final/perturbation_diff/inference_3.csv"
+result_uq_path = None
+logits_csv_path = None
 
 number_samples = 1000
 temperature = 0.5
@@ -73,15 +71,17 @@ if __name__ == "__main__":
     print('Initialization Finished')
 
     # create a blank new csv file
-    result = pd.DataFrame(columns=['dicom_id', 'study_id', 'subject_id', 'target'])
+    # result = pd.DataFrame(columns=['dicom_id', 'study_id', 'subject_id', 'target'])
 
     # Read from a csv file 
     input_csv = pd.read_csv(input_csv)
 
     f = open(result_csv_path, 'w')
-    f_uq = open(result_uq_path, 'w')
     f.write("dicom_id,study_id,subject_id,target\n")
-    f_uq.write("data_id,max_prob,max_prob_sentence,max_prob_token,avg_prob,avg_prob_sentence,max_entropy,max_entropy_sentence,max_entropy_token,avg_entropy,avg_entropy_sentence,token_record\n")
+    f.flush()
+    if result_uq_path:
+        f_uq = open(result_uq_path, 'w')
+        f_uq.write("data_id,max_prob,max_prob_sentence,max_prob_token,avg_prob,avg_prob_sentence,max_entropy,max_entropy_sentence,max_entropy_token,avg_entropy,avg_entropy_sentence,token_record\n")
 
     # loop through each row
     for index, row in input_csv.iterrows():
@@ -111,12 +111,15 @@ if __name__ == "__main__":
 
             # write the row to the new csv file
             f.write(f"{dicom_id},{study_id},{subject_id},\"{output_text}\"\n")
+            f.flush()
 
-            uq = get_scores(logits_csv_path)
-            f_uq.write(f"{index},{uq[0]},\"{uq[1]}\",\"{uq[2]}\",{uq[3]},\"{uq[4]}\",{uq[5]},\"{uq[6]}\",\"{uq[7]}\",{uq[8]},\"{uq[9]}\",\"{uq[10]}\"\n")
+            if result_uq_path:
+                uq = get_scores(logits_csv_path)
+                f_uq.write(f"{index},{uq[0]},\"{uq[1]}\",\"{uq[2]}\",{uq[3]},\"{uq[4]}\",{uq[5]},\"{uq[6]}\",\"{uq[7]}\",{uq[8]},\"{uq[9]}\",\"{uq[10]}\"\n")
 
 
     f.close()
-    f_uq.close()
+    if result_uq_path:
+        f_uq.close()
 
                 
